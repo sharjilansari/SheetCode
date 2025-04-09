@@ -6,7 +6,7 @@ class ApiResponse {
     private message: string
     private success: boolean
 
-    constructor(statusCode: number, data: string | Promise<any>, message: string = "Success"){
+    constructor(statusCode: number, data: string | Promise<any> | Object | any, message: string = "Success"){
         this.statusCode = statusCode;
         this.data = data;
         this.message = message;

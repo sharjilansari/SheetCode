@@ -1,16 +1,11 @@
-import { response, Response } from "express";
 import axios from "axios";
+import { submissionsAll } from "../utils/types";
 
-class SubmissionHandler {   
-  fetchToken = async (
-    languageId: string,
-    code: string,
-    input: string,
-    expectedOutput: string
-  ) => {
+class SubmissionHandler {
+  fetchToken = async (submissions: submissionsAll) => {
     const options = {
       method: "POST",
-      url: "https://judge0-ce.p.rapidapi.com/submissions",
+      url: "https://judge0-ce.p.rapidapi.com/submissions/batch",
       params: {
         base64_encoded: "true",
         wait: "false",
@@ -21,63 +16,75 @@ class SubmissionHandler {
         "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
         "Content-Type": "application/json",
       },
-      data: {
-        language_id: languageId,
-        source_code: code,
-        stdin: input,
-        expected_output: expectedOutput,
-        // callback_url:{/*callback url*/}
-      },
+      data: submissions,
     };
 
     try {
       const response = await axios.request(options);
-      const token = response.data.token;
-      console.log(response.data.token); //this gives an object which has token ie response.data.token
-      return token;
+      const tokens = response.data;
+      console.log(tokens);
+      return tokens;
     } catch (error) {
       console.log(error);
     }
   };
 
-  fetchVerdict = async (token: Promise<any>) => {
-    const resolvedToken = await token;
-  
+  fetchVerdict = async (resolvedAllTokens: string) => {
+    //const resolvedAllTokens = token;
+    console.log("Resolved Tokens:", resolvedAllTokens);
+
     const options = {
       method: "GET",
-      url: `https://judge0-ce.p.rapidapi.com/submissions/${resolvedToken}?base64_encoded=false&fields=stdout,stderr,status_id,language_id,status`,
+      url: "https://judge0-ce.p.rapidapi.com/submissions/batch",
       params: {
+        tokens: resolvedAllTokens,
         base64_encoded: "true",
-        fields: "*",
+        fields: "status,language,time,stderr",
       },
       headers: {
         "x-rapidapi-key": process.env.JUDGE_API_KEY,
         "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
       },
     };
-  
-    // Recursive polling wrapped in a promise
-    const pollStatus = async (): Promise<any> => {
-      const response = await axios.request(options);
-      const status = response.data.status.description;
-        
-      if (status !== "Processing") {
-        console.log("Status:", status, "- Stopping.");
-        return response.data.status.description;
+
+    const pollStatus = async (): Promise<string> => {
+      try {
+        const response = await axios.request(options);
+        const data = response.data.submissions;
+
+        console.log("Poll Response:", data);
+
+        const pending = data.some(
+          (result: any) =>
+            result?.status?.description === "In Queue" ||
+            result?.status?.description === "Processing"
+        );
+        const rejected = data.some(
+          (result: any) => result?.status?.description !== "Accepted"
+        );
+
+        if (pending) {
+          console.log("Still processing... polling again in 2 seconds.");
+          return new Promise((resolve) => {
+            setTimeout(async () => {
+              const result = await pollStatus();
+              resolve(result);
+            }, 2000);
+          });
+        } else if (rejected) {
+          console.log("At least one rejected.");
+          return "Rejected";
+        } else {
+          console.log("All accepted.");
+          return "Accepted";
+        }
+      } catch (error) {
+        console.error("Polling error:", error);
+        return "Error";
       }
-  
-      // Wait 2 seconds and try again
-      return new Promise((resolve) => {
-        setTimeout(async () => {
-          const result = await pollStatus();
-          resolve(result);
-        }, 2000);
-      });
     };
-  
-    // Await the final verdict and return
-    const result = await pollStatus();
-    return result;
+
+    return await pollStatus();
   };
 
 }

@@ -10,7 +10,7 @@ app.use(cors({
 
 app.use(express.json()); 
 
-import submissionRouter from "./routes/submission.routes"
+import submissionRouter from "./controller/submission.controller"
 
 app.use("/api/v1", submissionRouter);
 
