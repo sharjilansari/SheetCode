@@ -2,18 +2,24 @@ import { Request, Response, NextFunction } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
-import axios from "axios";
 import { SubmissionHandler } from "../apiHandler/submissionHandler";
+import { submissionsAll } from "../utils/types";
 
 const postSubmissions = asyncHandler(async (req: Request, res: Response) => {
-  const { code, languageId, input, expectedOutput }:{code: string, languageId: string, input: string, expectedOutput: string} = req.body;
+  const {submissions} = req.body;
 
-  const submissions = new SubmissionHandler;
-  const token = submissions.fetchToken(languageId, code, input, expectedOutput);
-  const data = await submissions.fetchVerdict(token);
+  const submissionsHandler = new SubmissionHandler;
+  const tokens = await submissionsHandler.fetchToken(JSON.stringify(submissions));
+  const combinedTokens = await tokens.map((token) => (token.token)).join(",");
+  const data = await submissionsHandler.fetchVerdict(combinedTokens);
   console.log(data);
-  res.json(new ApiResponse(200, data, 'success'))
+  res.status(200).json(new ApiResponse(200, data, "Success"));
 });
+
+const saveSubmissions = asyncHandler( async (req: Request, res: Response) => {
+  const {submissions, problemId} = req.body;
+
+})
 
 
 export { postSubmissions };

@@ -7,10 +7,22 @@ import { change } from "../features/counter/counterSlice";
 import ApiService from "../services/apis";
 import { encodeToBase64 } from "./encodeToBase64";
 import { test_cases } from "../problems/problem1/tests/input";
+import { submissionsAll } from "./types";
+import Loader from "../components/ui/Loader";
+import { ToastContainer, toast } from 'react-toastify';
+import {useNavigate, useParams} from "react-router";
 
 function MonacoEditor() {
+  const notify = (type: "success" | "error" | "info" | "warn", message: string) => {
+    toast[type](message);
+  };
+  const [loading, setLoading] = useState<boolean>(false);
   const [language, setLanguage] = useState<string>("C (GCC 14.1.0)");
   const [languageId, setLanguageId] = useState<number>(52);
+  const [submissionsData, setSubmissionsData] = useState<submissionsAll>();
+
+  const navigate = useNavigate();
+  const {id} = useParams();
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -28,16 +40,42 @@ function MonacoEditor() {
     editorRef.current = editor;
   }
 
-  function submitValue() {
+  async function submitValue() {
+    setLoading(true);
     if (editorRef.current) {
       dispatch(change(editorRef.current.getValue()));
       const code = editorRef.current.getValue();
       const encodedToBase64 = encodeToBase64(code);
-      test_cases.testCases.forEach((testCase) => {
-        const input = encodeToBase64(testCase.input);
-        const expectedOutput = encodeToBase64(testCase.expectedOutput)
-        apiService.sendSubmissions(languageId, encodedToBase64, input, expectedOutput);
-      });
+      const allSubmissions = test_cases.testCases.map((testCase) => ({
+        language_id: languageId,
+        source_code: encodedToBase64,
+        input: encodeToBase64(testCase.input),
+        expectedOutput: encodeToBase64(testCase.expectedOutput)
+      }));
+      const submissionsData: submissionsAll = {
+        submissions: allSubmissions
+      }
+      setSubmissionsData(submissionsData);
+      // console.log(submissionsData);
+      try {
+        const data = await apiService.sendSubmissions(submissionsData);
+        console.log(data);
+        if(data){
+          setLoading(false);
+          if(data.data != "Accepted"){
+            notify("error", "Rejected!!!");
+            navigate(`/problems/${id}/submissions`);
+          } else {
+            notify("success", "Accepted!!!");
+            navigate(`/problems/${id}/submissions`);
+          }
+        } 
+      } catch (error) {
+        setLoading(false);
+        notify("error", "Something went wrong!!!");
+        navigate(`/problems/${id}/submissions`);
+        console.log(error);
+      }
     }
   }
 
@@ -87,8 +125,9 @@ function MonacoEditor() {
         onClick={submitValue}
         className="mt-4 bg-blue-600 hover:bg-blue-500 transition-all text-white py-2 px-4 rounded shadow-md w-full"
       >
-        Submit
+        {loading ? <Loader /> : "Submit"}
       </button>
+      <ToastContainer />
     </div>
   );
 }

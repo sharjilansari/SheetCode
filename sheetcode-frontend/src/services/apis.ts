@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import { submissionsAll } from "../utils/types";
 
 class ApiService {
   private baseUrl: string;
@@ -14,11 +15,11 @@ class ApiService {
     });
   }
 
-  async sendSubmissions(languageId: number, code: string, input: string, expectedOutput: string) {
+  async sendSubmissions(submissions: submissionsAll) {
     try {
       const response = await this.axiosInstance.post(
         "/submissions",
-        { languageId, code, input, expectedOutput }
+        { submissions}
       );
       return response.data;
     } catch (error) {
