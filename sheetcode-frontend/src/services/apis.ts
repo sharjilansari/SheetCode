@@ -15,11 +15,11 @@ class ApiService {
     });
   }
 
-  async sendSubmissions(submissions: submissionsAll) {
+  async sendSubmissions(submissions: submissionsAll, userId: string, problemId: string, code: string, language: string) {
     try {
       const response = await this.axiosInstance.post(
         "/submissions",
-        { submissions}
+        { submissions, userId, problemId, code, language}
       );
       return response.data;
     } catch (error) {
@@ -28,18 +28,18 @@ class ApiService {
     }
   }
 
-  //   async fetchSubmissions(token) {
-  //     try {
-  //       const response = await this.axiosInstance.get(`/messages`, {
-  //         params: { user: userId },
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       return response.data;
-  //     } catch (error) {
-  //       console.error("Error fetching messages:", error);
-  //       throw error;
-  //     }
-  //   }
+  async getSubmissionsOfUserForGivenProblem(userId: string, problemId: string){
+    try {
+      const response = await this.axiosInstance.get("/get-submissions",{
+        params: { userId, problemId }
+      })
+      return response.data.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
 }
 
 export default ApiService;
