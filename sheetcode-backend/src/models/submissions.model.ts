@@ -11,8 +11,7 @@ const submissionSchema = new mongoose.Schema(
         ref: "Problems"
     },
     status: {
-      type: Schema.Types.ObjectId,
-      ref: "Status"
+      type: String,
     },
     code: {
       type: String,

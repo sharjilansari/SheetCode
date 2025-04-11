@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ToastContainer, toast } from 'react-toastify';
+import {LocalStorage} from "../../utils/saveToLocalStorage";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState(""); // New state
   const [password, setPassword] = useState("");
+
   const navigate = useNavigate();
+
+  const localStorage = new LocalStorage();
 
   const notify = (type: "success" | "error" | "info" | "warn", message: string) => {
     toast[type](message);
@@ -26,6 +30,7 @@ const AuthPage = () => {
       if (response.ok) {
         console.log("Login Success:", data);
         notify("success", "Logged In Successfully!")
+        localStorage.saveToLocalStorage(data.data.user._id);
         navigate("/");
       } else {
         notify("error", "Log In Failed!")
@@ -50,6 +55,7 @@ const AuthPage = () => {
       if (response.ok) {
         console.log("Signup Success:", data);
         notify("success", "Signed Up Successfully!");
+        localStorage.saveToLocalStorage(data.data._id);
         navigate("/");
       } else {
         alert(data.message || "Signup failed");

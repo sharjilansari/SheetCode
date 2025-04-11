@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
-import axios from "axios";
 
 const fetchProblems = asyncHandler(async (req: Request, res: Response) => {
   console.log("Collection being used:", Problems.collection.name);

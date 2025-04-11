@@ -3,8 +3,9 @@ interface submissionsAll {
     {
       language_id: number;
       source_code: string;
-      input: string;
-      expectedOutput: string;
+      stdin: string;
+      expected_output: string;
     }[];
 }
+
 export type {submissionsAll};

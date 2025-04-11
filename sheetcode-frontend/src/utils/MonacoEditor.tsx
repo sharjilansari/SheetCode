@@ -7,28 +7,41 @@ import { change } from "../features/counter/counterSlice";
 import ApiService from "../services/apis";
 import { encodeToBase64 } from "./encodeToBase64";
 import { test_cases } from "../problems/problem1/tests/input";
-import { submissionsAll } from "./types";
+import { Language, submissionsAll } from "./types";
 import Loader from "../components/ui/Loader";
-import { ToastContainer, toast } from 'react-toastify';
-import {useNavigate, useParams} from "react-router";
+import { ToastContainer, toast } from "react-toastify";
+import { useNavigate, useParams } from "react-router";
+import { LocalStorage } from "./saveToLocalStorage";
+import { templates } from "./languageTemplates";
 
 function MonacoEditor() {
-  const notify = (type: "success" | "error" | "info" | "warn", message: string) => {
+  const notify = (
+    type: "success" | "error" | "info" | "warn",
+    message: string
+  ) => {
     toast[type](message);
   };
   const [loading, setLoading] = useState<boolean>(false);
-  const [language, setLanguage] = useState<string>("C (GCC 14.1.0)");
-  const [languageId, setLanguageId] = useState<number>(52);
+  const [language, setLanguage] = useState<string>();
+  const [languageId, setLanguageId] = useState<number>();
   const [submissionsData, setSubmissionsData] = useState<submissionsAll>();
 
   const navigate = useNavigate();
-  const {id} = useParams();
+  const { id } = useParams();
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const dispatch = useAppDispatch();
 
   const apiService = new ApiService(import.meta.env.VITE_BASE_URL);
+  const localStorage = new LocalStorage();
+
+  useEffect(() => {
+    if (languages.length) {
+      setLanguage(languages[0].name);
+      setLanguageId(languages[0].id);
+    }
+  }, []);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -43,33 +56,51 @@ function MonacoEditor() {
   async function submitValue() {
     setLoading(true);
     if (editorRef.current) {
+      if (!languageId) {
+        notify("error", "Please select a language before submitting.");
+        setLoading(false);
+        return;
+      }
+
       dispatch(change(editorRef.current.getValue()));
       const code = editorRef.current.getValue();
       const encodedToBase64 = encodeToBase64(code);
       const allSubmissions = test_cases.testCases.map((testCase) => ({
         language_id: languageId,
         source_code: encodedToBase64,
-        input: encodeToBase64(testCase.input),
-        expectedOutput: encodeToBase64(testCase.expectedOutput)
+        stdin: encodeToBase64(testCase.input),
+        expected_output: encodeToBase64(testCase.expectedOutput),
       }));
       const submissionsData: submissionsAll = {
-        submissions: allSubmissions
-      }
+        submissions: allSubmissions,
+      };
       setSubmissionsData(submissionsData);
+      //save submission to database
+      const userData = localStorage.getFromLocalStorage();
+      let userId: string = userData._id;
       // console.log(submissionsData);
       try {
-        const data = await apiService.sendSubmissions(submissionsData);
+        const language_id = languages.find(
+          (lang) => lang.id === languageId
+        )?._id;
+        const data = await apiService.sendSubmissions(
+          submissionsData,
+          userId,
+          id!,
+          encodedToBase64,
+          language_id!
+        );
         console.log(data);
-        if(data){
+        if (data) {
           setLoading(false);
-          if(data.data != "Accepted"){
+          if (data.data != "Accepted") {
             notify("error", "Rejected!!!");
             navigate(`/problems/${id}/submissions`);
           } else {
             notify("success", "Accepted!!!");
             navigate(`/problems/${id}/submissions`);
           }
-        } 
+        }
       } catch (error) {
         setLoading(false);
         notify("error", "Something went wrong!!!");
@@ -99,7 +130,7 @@ function MonacoEditor() {
           onChange={handleChange}
           className="bg-[#333] text-white border border-gray-600 p-2 rounded focus:outline-none"
         >
-          {languages.map((language, index) => (
+          {languages.map((language: Language, index: number) => (
             <option key={index} value={language.id}>
               {language.name}
             </option>

@@ -3,8 +3,28 @@ interface submissionsAll {
     {
       language_id: number;
       source_code: string;
-      input: string;
-      expectedOutput: string;
+      stdin: string;
+      expected_output: string;
     }[];
 }
-export type {submissionsAll};
+
+ interface Language {
+  _id: string;
+  id: number;
+  name: string;
+}
+
+interface Submission {
+  _id: string ;
+  userId: string;
+  problemId: string;
+  status: string;
+  code: string;
+  language: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+
+
+export type {submissionsAll, Language, Submission};
