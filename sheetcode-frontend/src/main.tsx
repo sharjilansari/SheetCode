@@ -23,10 +23,10 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/login" element={<AuthPage />}/>
 
             {/* Route for selected problem view */}
-            <Route path="problems/:id" element={<ProtectedRoute><ProblemLayout /></ProtectedRoute>}>
-              <Route index element={<ProtectedRoute><Navigate to="description" replace /></ProtectedRoute>} />
-              <Route path="description" element={<ProtectedRoute><Description /></ProtectedRoute>} />
-              <Route path="submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
+            <Route path="problems/:id" element={<ProblemLayout />}>
+              <Route index element={<Navigate to="description" replace />} />
+              <Route path="description" element={<Description />} />
+              <Route path="submissions" element={<Submissions />} />
             </Route>
           </Route>
         </Routes>

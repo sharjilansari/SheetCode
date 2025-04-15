@@ -33,8 +33,9 @@ const ProblemsList = () => {
   };
 
   return (
-    <div className="p-6 bg-[#1E1E1E] text-white rounded-md shadow-md">
-      <h2 className="text-2xl font-semibold mb-4">Problem List</h2>
+    <>
+    <div className="p-6 bg-[#1E1E1E] text-white rounded-md shadow-md overflow-y-auto">
+      <h2 className="text-2xl font-semibold mb-4 sticky top-0 z-10 bg-[#1E1E1E]">Problem List</h2>
       <div className="space-y-3">
         {problems && problems.map((problem) => (
           <button
@@ -58,6 +59,7 @@ const ProblemsList = () => {
         ))}
       </div>
     </div>
+    </>
   );
 };
 

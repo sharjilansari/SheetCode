@@ -13,6 +13,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router";
 import { LocalStorage } from "./saveToLocalStorage";
 import { templates } from "./languageTemplates";
+import LockedSection from "../components/ui/LockedSection";
 
 function MonacoEditor() {
   const notify = (
@@ -137,7 +138,7 @@ function MonacoEditor() {
           ))}
         </select>
       </div>
-
+      <LockedSection>
       <div className="rounded overflow-hidden border border-gray-600 h-[70vh] w-full">
         <Editor
           theme="vs-dark"
@@ -158,6 +159,7 @@ function MonacoEditor() {
       >
         {loading ? <Loader /> : "Submit"}
       </button>
+      </LockedSection>
       <ToastContainer />
     </div>
   );
