@@ -28,11 +28,12 @@ class ApiService {
     }
   }
 
-  async getSubmissionsOfUserForGivenProblem(userId: string, problemId: string){
+  async getSubmissionsOfUserForGivenProblem(userId: string, problemId: string, skip: number, limit: number){
     try {
       const response = await this.axiosInstance.get("/get-submissions",{
-        params: { userId, problemId }
+        params: { userId, problemId, skip, limit }
       })
+      console.log(response.data.data);
       return response.data.data;
     } catch (error) {
       console.log(error);
