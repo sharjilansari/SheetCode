@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
-import ApiService from "../../services/apis";
-import { useParams } from "react-router";
+import ApiService from "../../services/submissionHandler";
+import { useLocation, useParams } from "react-router";
 import { LocalStorage } from "../../utils/saveToLocalStorage";
 import { Submission } from "../../utils/types";
 import { languages } from "../../utils/languagesArray";
 import LockedSection from "./LockedSection"
-import { useAppSelector } from "../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import Pagination from "./Pagination";
+import { setAuth } from "../../features/counter/authSlice";
 
 export default function Submissions() {
 
   const {id} = useParams();
+  const location = useLocation();
   
   const [submissions, setSubmissions] = useState<Submission[]>();
   const [totalItems, setTotalItems] = useState<number>();
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const dispatch = useAppDispatch();
 
   const demoSubmissions = [
     { id: 1, language: "JavaScript", status: "Accepted", timestamp: "10:30 AM" },
@@ -29,9 +33,12 @@ export default function Submissions() {
   const submissionHandler = new ApiService(import.meta.env.VITE_BASE_URL);
   const getUserDataFromLocalStorage = new LocalStorage()
 
-  const userData = getUserDataFromLocalStorage.getFromLocalStorage();
+  const userData = getUserDataFromLocalStorage.getFromLocalStorage("userData");
+  if(!userData) dispatch(setAuth(false));
+  // console.log(userData.data.user._id);
 
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  // console.log(isAuthenticated);
 
   const paginate = (PageNumber: number) => {
     setCurrentPage(PageNumber);
@@ -40,15 +47,14 @@ export default function Submissions() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const skip = totalItems ? totalItems - (currentPage * itemsPerPage) : 0; 
+      const skip = (currentPage - 1) * itemsPerPage; 
       const limit= itemsPerPage
-      const data = await submissionHandler.getSubmissionsOfUserForGivenProblem(userData._id, id!, skip, limit);
+      const data = await submissionHandler.getSubmissionsOfUserForGivenProblem(userData.data.user._id, id!, skip, limit);
       setTotalItems(data.totalNoOfSubmissions);
-      console.log(data);
-      setSubmissions(data.allSubmissionsOfUserForGivenProblem.reverse());
+      setSubmissions(data.allSubmissionsOfUserForGivenProblem);
     }
-    fetchData();
-  }, [userData._id, id, currentPage])
+    if(isAuthenticated) fetchData();
+  }, [id, currentPage, isAuthenticated, location.state])
 
 
   return (
@@ -81,8 +87,8 @@ export default function Submissions() {
               <tr key={submission._id} className="border-b border-gray-600 hover:bg-[#333] transition">
                 <td className="p-3">{submission._id}</td>
                 <td className="p-3">{languages.find(lang => lang._id === submission.language)?.name}</td>
-                <td className={`p-3 font-semibold ${getStatusColor(submission.status)}`}>
-                  {submission.status}
+                <td className={`p-3 font-semibold ${getStatusColor(submission.status.status)}`}>
+                  {submission.status.status}
                 </td>
                 <td className="p-3">{String(submission.createdAt)}</td>
               </tr>
@@ -90,7 +96,7 @@ export default function Submissions() {
           </tbody>}
         </table>
       </div>
-      <Pagination currentPage = {currentPage} totalItems = {totalItems || 0} paginate = {paginate} itemsPerPage = {itemsPerPage} />
+      {submissions && <Pagination currentPage = {currentPage} totalItems = {totalItems || 0} paginate = {paginate} itemsPerPage = {itemsPerPage} />}
     </div>
     </LockedSection>
   );
@@ -100,7 +106,7 @@ function getStatusColor(status: string) {
   switch (status) {
     case "Accepted":
       return "text-green-400";
-    case "Rejected":
+    case "Wrong Answer":
       return "text-red-400";
     case "Time Limit Exceeded":
       return "text-yellow-400";

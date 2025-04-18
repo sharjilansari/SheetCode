@@ -1,76 +1,94 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ToastContainer, toast } from 'react-toastify';
-import {LocalStorage} from "../../utils/saveToLocalStorage";
+import { ToastContainer, toast } from "react-toastify";
+import { LocalStorage } from "../../utils/saveToLocalStorage";
+import { useAppDispatch } from "../../app/hooks";
+import getCookie from "../../utils/getCookie";
+import { setAuth } from "../../features/counter/authSlice";
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const token = getCookie("accessToken");
+  const dispatch = useAppDispatch();
+  const [isLogin, setIsLogin] = useState(() => {
+    return token ? true : false;
+  });
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState(""); // New state
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
 
-  const localStorage = new LocalStorage();
+  const storage = new LocalStorage();
 
-  const notify = (type: "success" | "error" | "info" | "warn", message: string) => {
+  const notify = (
+    type: "success" | "error" | "info" | "warn",
+    message: string
+  ) => {
     toast[type](message);
   };
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
         console.log("Login Success:", data);
-        notify("success", "Logged In Successfully!")
-        localStorage.saveToLocalStorage(data.data.user._id);
+        notify("success", "Logged In Successfully!");
+        dispatch(setAuth(true))
+        storage.saveToLocalStorage("userData", data);
         navigate("/");
       } else {
-        notify("error", "Log In Failed!")
+        notify("error", "Log In Failed!");
         alert(data.message || "Login failed");
       }
     } catch (error) {
       console.error("Login Error:", error);
-      notify("error", "Log In Failed!")
+      notify("error", "Log In Failed!");
     }
   };
 
   const handleSignup = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ fullName: username, email, password }), // Include username
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ fullName: username, email, password }), // Include username
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
         console.log("Signup Success:", data);
         notify("success", "Signed Up Successfully!");
-        localStorage.saveToLocalStorage(data.data._id);
+        dispatch(setAuth(true))
+        storage.saveToLocalStorage("userData", data);
         navigate("/");
       } else {
         alert(data.message || "Signup failed");
-        notify("error", "Sign Up Failed!")
+        notify("error", "Sign Up Failed!");
       }
     } catch (error) {
       console.error("Signup Error:", error);
-      notify("error", "Sign Up Failed!")
+      notify("error", "Sign Up Failed!");
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h2 className="text-2xl font-semibold mb-6 text-white">
-        {isLogin ? "Login" : "Signup"}
+        {token && isLogin ? "Login" : "Signup"}
       </h2>
 
       {!isLogin && (
@@ -103,13 +121,13 @@ const AuthPage = () => {
         onClick={isLogin ? handleLogin : handleSignup}
         className="bg-blue-600 text-white px-6 py-2 rounded w-64"
       >
-        {isLogin ? "Login" : "Signup"}
+        {token && isLogin ? "Login" : "Signup"}
       </button>
 
       <p className="mt-4 text-white">
         {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
         <button className="text-blue-500" onClick={() => setIsLogin(!isLogin)}>
-          {isLogin ? "Signup" : "Login"}
+          {token && isLogin ? "Signup" : "Login"}
         </button>
       </p>
       <ToastContainer />

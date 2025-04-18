@@ -21,9 +21,10 @@ class ApiService {
         "/submissions",
         { submissions, userId, problemId, code, language}
       );
-      return response.data;
+      console.log(response.data.data);
+      return response.data.data;
     } catch (error) {
-      console.error("Error saving message:", error);
+      console.error("Error saving submission:", error);
       throw error;
     }
   }

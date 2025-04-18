@@ -3,6 +3,7 @@ import { Lock } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import getCookie from '../../utils/getCookie';
 import { setAuth } from '../../features/counter/authSlice';
+import { LocalStorage } from '../../utils/saveToLocalStorage';
 
 interface LockedSectionProps {
   // isAuthenticated: boolean;
@@ -12,10 +13,12 @@ interface LockedSectionProps {
 const LockedSection: React.FC<LockedSectionProps> = ({children }) => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const storage = new LocalStorage();
 
   useEffect(() => {
     const token = getCookie("accessToken");
-    if (token && !isAuthenticated) {
+    const userData = storage.getFromLocalStorage("userData");
+    if (token && !isAuthenticated && userData) {
       dispatch(setAuth(true));
     }
   }, [dispatch, isAuthenticated]);

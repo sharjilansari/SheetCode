@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { SubmissionHandler } from "../apiHandler/submissionHandler";
-import { submissionsAll } from "../utils/types";
+import { Result, submissionsAll } from "../utils/types";
 import { Submissions } from "../models/submissions.model";
 
 const postSubmissions = asyncHandler(async (req: Request, res: Response) => {
@@ -17,7 +17,7 @@ const postSubmissions = asyncHandler(async (req: Request, res: Response) => {
     submissions: submissionsAll;
     userId: string;
     problemId: string;
-    status: string;
+    status: Result;
     code: string;
     language: string;
   } = req.body;
@@ -28,10 +28,12 @@ const postSubmissions = asyncHandler(async (req: Request, res: Response) => {
   );
   const combinedTokens = tokens.map((token) => token.token).join(",");
   const data = await submissionsHandler.fetchVerdict(combinedTokens);
-  console.log(data);
+  // console.log(data);
+
+  console.log("userId: ", userId, "prbID: ", problemId,"data: ", data,"code: " , code, "language: " ,language);
 
   if (!userId || !problemId || !data || !code || !language) {
-    res.status(300).json(new ApiError(300, "All data not received"));
+    return res.status(400).json(new ApiError(400, "All data not received"));
   }
 
   const submission = await Submissions.create({
@@ -43,11 +45,11 @@ const postSubmissions = asyncHandler(async (req: Request, res: Response) => {
   });
 
   if (!submission) {
-    res
+    return res
       .status(500)
       .json(new ApiError(500, "Could not save submission from server side"));
   }
-  res.status(200).json(new ApiResponse(200, data, "Success"));
+  return res.status(200).json(new ApiResponse(200, data, "Success"));
 });
 
 const getAllSubmissionsOfUserForGivenProblem = asyncHandler(
@@ -59,18 +61,19 @@ const getAllSubmissionsOfUserForGivenProblem = asyncHandler(
 
     console.log("skip: ", skip, "limit: ", limit);
 
-    const totalNoOfSubmissions = await Submissions.countDocuments({});
+    const totalNoOfSubmissions = await Submissions.countDocuments({ userId, problemId });
+    console.log(totalNoOfSubmissions);
     
     const query = Submissions.find({ userId, problemId });
     
     if (skip && limit) {
-      query.skip(skipValue).limit(limitValue);
+      query.sort({ createdAt: -1 }).skip(skipValue).limit(limitValue);
     }
     
     const allSubmissionsOfUserForGivenProblem = await query;
 
     if (!allSubmissionsOfUserForGivenProblem) {
-      res.status(200).json(new ApiResponse(200, [], "No Data found"));
+      return res.status(200).json(new ApiResponse(200, [], "No Data found"));
     }
 
     const data = {
@@ -78,8 +81,8 @@ const getAllSubmissionsOfUserForGivenProblem = asyncHandler(
       totalNoOfSubmissions: totalNoOfSubmissions
     }
 
-    console.log(data);
-    res
+    // console.log(data);
+    return res
       .status(200)
       .json(
         new ApiResponse(200, data, "Success")

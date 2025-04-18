@@ -36,7 +36,7 @@ const fetchProblems = asyncHandler(async (req: Request, res: Response) => {
 
 const fetchOneProblem = asyncHandler(async (req: Request, res: Response) => {
   const {id} = req.params;
-  console.log("Requested ID:", id);
+  // console.log("Requested ID:", id);
   const problem = await Problems.findOne({_id: id})
 
   res.status(200).json(new ApiResponse(200, problem, "Success"))

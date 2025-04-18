@@ -1,0 +1,90 @@
+[{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553389"
+  },
+  "problemTitle": "Merge Two Sorted Lists",
+  "description": "Merge two sorted linked lists and return it as a new sorted list.",
+  "examples": "Input: l1 = [1,2,4], l2 = [1,3,4]\nOutput: [1,1,2,3,4,4]",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc8055338c"
+  },
+  "problemTitle": "Search Insert Position",
+  "description": "Given a sorted array of distinct integers and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.",
+  "examples": "Input: nums = [1,3,5,6], target = 5\nOutput: 2\n\nInput: nums = [1,3,5,6], target = 2\nOutput: 1",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553384"
+  },
+  "problemTitle": "Reverse Integer",
+  "description": "Given a signed 32-bit integer x, return x with its digits reversed. If reversing x causes the value to go outside the signed 32-bit integer range, return 0.",
+  "examples": "Input: x = 123\nOutput: 321\n\nInput: x = -123\nOutput: -321",
+  "difficulty": "Medium"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553385"
+  },
+  "problemTitle": "Palindrome Number",
+  "description": "Given an integer x, return true if x is a palindrome, and false otherwise.",
+  "examples": "Input: x = 121\nOutput: true\n\nInput: x = -121\nOutput: false",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc8055338a"
+  },
+  "problemTitle": "Remove Duplicates from Sorted Array",
+  "description": "Given a sorted array nums, remove the duplicates in-place such that each element appears only once and return the new length.",
+  "examples": "Input: nums = [1,1,2]\nOutput: 2, nums = [1,2,_]",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553388"
+  },
+  "problemTitle": "Valid Parentheses",
+  "description": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+  "examples": "Input: s = \"()[]{}\"\nOutput: true\n\nInput: s = \"(]\"\nOutput: false",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc8055338b"
+  },
+  "problemTitle": "Implement strStr()",
+  "description": "Return the index of the first occurrence of needle in haystack, or -1 if needle is not part of haystack.",
+  "examples": "Input: haystack = \"hello\", needle = \"ll\"\nOutput: 2",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553387"
+  },
+  "problemTitle": "Longest Common Prefix",
+  "description": "Write a function to find the longest common prefix string amongst an array of strings. If there is no common prefix, return an empty string \"\".",
+  "examples": "Input: strs = [\"flower\",\"flow\",\"flight\"]\nOutput: \"fl\"",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553383"
+  },
+  "problemTitle": "Two Sum",
+  "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+  "examples": "Input: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: Because nums[0] + nums[1] == 9, we return [0, 1].",
+  "difficulty": "Easy"
+},
+{
+  "_id": {
+    "$oid": "67f5599c64f0ddfc80553386"
+  },
+  "problemTitle": "Roman to Integer",
+  "description": "Convert a Roman numeral to an integer.",
+  "examples": "Input: s = \"III\"\nOutput: 3\n\nInput: s = \"LVIII\"\nOutput: 58",
+  "difficulty": "Easy"
+}]

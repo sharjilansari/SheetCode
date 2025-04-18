@@ -7,18 +7,30 @@ const submissionSchema = new mongoose.Schema(
       ref: "User",
     },
     problemId: {
-        type: Schema.Types.ObjectId,
-        ref: "Problems"
+      type: Schema.Types.ObjectId,
+      ref: "Problems",
     },
     status: {
-      type: String,
+      data: [
+        {
+          stdout: String,
+          status_id: Number,
+          time: String,
+          memory: Number,
+          stderr: String,
+          compile_output: String,
+          status: { id: Number, description: String },
+          language: { id: Number, name: String },
+        },
+      ],
+      status: String,
     },
     code: {
       type: String,
     },
     language: {
       type: Schema.Types.ObjectId,
-      ref: "Languages"
+      ref: "Languages",
     },
   },
   {

@@ -2,56 +2,73 @@ import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { useEffect, useRef, useState } from "react";
 import { languages } from "./languagesArray";
-import { useAppDispatch } from "../app/hooks";
-import { change } from "../features/counter/counterSlice";
-import ApiService from "../services/apis";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { changeCode } from "../features/counter/codeSlice";
+import ApiService from "../services/submissionHandler";
 import { encodeToBase64 } from "./encodeToBase64";
-import { test_cases } from "../problems/problem1/tests/input";
-import { Language, submissionsAll } from "./types";
+import { Language, Result, submissionsAll, TestCase } from "./types";
 import Loader from "../components/ui/Loader";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router";
 import { LocalStorage } from "./saveToLocalStorage";
-import { templates } from "./languageTemplates";
 import LockedSection from "../components/ui/LockedSection";
+import { givesTestCasesForGivenProblemId } from "./problemIdToTestCase";
 
 function MonacoEditor() {
   const notify = (
     type: "success" | "error" | "info" | "warn",
     message: string
-  ) => {
-    toast[type](message);
-  };
+  ) => toast[type](message);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [language, setLanguage] = useState<string>();
   const [languageId, setLanguageId] = useState<number>();
   const [submissionsData, setSubmissionsData] = useState<submissionsAll>();
+  const [testCases, setTestCases] = useState<TestCase[]>();
+  // const [codeMap, setCodeMap] = useState<Record<string, string>>({});
+
+  const codeMap: Record<string, string> = useAppSelector((state) => state.counter.codeMap); 
+  console.log(codeMap);
 
   const navigate = useNavigate();
   const { id } = useParams();
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-
   const dispatch = useAppDispatch();
 
   const apiService = new ApiService(import.meta.env.VITE_BASE_URL);
-  const localStorage = new LocalStorage();
+  const storage = new LocalStorage();
 
   useEffect(() => {
     if (languages.length) {
       setLanguage(languages[0].name);
       setLanguageId(languages[0].id);
     }
+    if (id) {
+      setTestCases(givesTestCasesForGivenProblemId(id));
+    }
   }, []);
 
   useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.setValue(`// Your ${language} code here`);
+    if (editorRef.current && language) {
+      const savedCode = codeMap?.[language] || `// Your ${language} code here`;
+      const currentCode = editorRef.current.getValue();
+  
+      // Only update if savedCode is different from current content
+      if (currentCode !== savedCode) {
+        editorRef.current.setValue(savedCode);
+      }
     }
-  }, [language]);
+  }, [language, codeMap]);
 
   function handleEditorDidMount(editor: monaco.editor.IStandaloneCodeEditor) {
     editorRef.current = editor;
+    editor.onDidChangeModelContent(() => {
+      const code = editor.getValue();
+      if (language) {
+        dispatch(changeCode( {language, code}));
+      }
+    });
   }
 
   async function submitValue() {
@@ -62,11 +79,19 @@ function MonacoEditor() {
         setLoading(false);
         return;
       }
+      if(language){
+        dispatch(changeCode( {language, code: editorRef.current.getValue()}));
+      }
 
-      dispatch(change(editorRef.current.getValue()));
+      if (!testCases) {
+        notify("error", "No test cases found for this problem!");
+        setLoading(false);
+        return;
+      }
+
       const code = editorRef.current.getValue();
       const encodedToBase64 = encodeToBase64(code);
-      const allSubmissions = test_cases.testCases.map((testCase) => ({
+      const allSubmissions = testCases.map((testCase) => ({
         language_id: languageId,
         source_code: encodedToBase64,
         stdin: encodeToBase64(testCase.input),
@@ -76,35 +101,32 @@ function MonacoEditor() {
         submissions: allSubmissions,
       };
       setSubmissionsData(submissionsData);
-      //save submission to database
-      const userData = localStorage.getFromLocalStorage();
-      let userId: string = userData._id;
-      // console.log(submissionsData);
+
+      const userData = storage.getFromLocalStorage("userData");
+      let userId: string = userData.data.user._id;
+
       try {
         const language_id = languages.find(
           (lang) => lang.id === languageId
         )?._id;
-        const data = await apiService.sendSubmissions(
+        const data: Result = await apiService.sendSubmissions(
           submissionsData,
           userId,
           id!,
           encodedToBase64,
           language_id!
         );
-        console.log(data);
-        if (data) {
-          setLoading(false);
-          if (data.data != "Accepted") {
-            notify("error", "Rejected!!!");
-            navigate(`/problems/${id}/submissions`);
-          } else {
-            notify("success", "Accepted!!!");
-            navigate(`/problems/${id}/submissions`);
-          }
+
+        setLoading(false);
+        if (data.status !== "Accepted") {
+          notify("error", "Wrong Answer!!!");
+        } else {
+          notify("success", "Accepted!!!");
         }
+        navigate(`/problems/${id}/submissions`, { state: { fromSubmit: true } });
       } catch (error) {
         setLoading(false);
-        notify("error", "Something went wrong!!!");
+        notify("error", "Something went wrong on server side!!!");
         navigate(`/problems/${id}/submissions`);
         console.log(error);
       }
@@ -117,7 +139,9 @@ function MonacoEditor() {
     const selectedLanguage = languages.find(
       (language) => language.id.toString() === e.target.value
     );
-    if (selectedLanguage) setLanguage(selectedLanguage.name);
+    if (selectedLanguage) {
+      setLanguage(selectedLanguage.name);
+    }
   };
 
   return (
@@ -138,27 +162,33 @@ function MonacoEditor() {
           ))}
         </select>
       </div>
-      <LockedSection>
-      <div className="rounded overflow-hidden border border-gray-600 h-[70vh] w-full">
-        <Editor
-          theme="vs-dark"
-          defaultLanguage={language}
-          defaultValue={`// Your ${language} code here`}
-          onMount={handleEditorDidMount}
-          options={{
-            fontSize: 14,
-            minimap: { enabled: false },
-          }}
-          className="h-full w-full"
-        />
-      </div>
 
-      <button
-        onClick={submitValue}
-        className="mt-4 bg-blue-600 hover:bg-blue-500 transition-all text-white py-2 px-4 rounded shadow-md w-full"
-      >
-        {loading ? <Loader /> : "Submit"}
-      </button>
+      <LockedSection>
+        <div className="rounded overflow-hidden border border-gray-600 h-[70vh] w-full">
+          <Editor
+            theme="vs-dark"
+            language={language}
+            value={codeMap?.[language || ""] || `// Your ${language} code here`}
+            onMount={handleEditorDidMount}
+            onChange={(value) => {
+              if (language && value !== undefined) {
+                dispatch(changeCode({ language, code: value }));
+              }
+            }}
+            options={{
+              fontSize: 14,
+              minimap: { enabled: false },
+            }}
+            className="h-full w-full"
+          />
+        </div>
+
+        <button
+          onClick={submitValue}
+          className="mt-4 bg-blue-600 hover:bg-blue-500 transition-all text-white py-2 px-4 rounded shadow-md w-full"
+        >
+          {loading ? <Loader /> : "Submit"}
+        </button>
       </LockedSection>
       <ToastContainer />
     </div>
