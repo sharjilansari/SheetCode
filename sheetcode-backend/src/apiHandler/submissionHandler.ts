@@ -1,5 +1,5 @@
 import axios from "axios";
-import { submissionsAll } from "../utils/types";
+import { Result, submissionsAll } from "../utils/types";
 
 class SubmissionHandler {
   fetchToken = async (submissions: submissionsAll) => {
@@ -38,8 +38,8 @@ class SubmissionHandler {
       url: "https://judge0-ce.p.rapidapi.com/submissions/batch",
       params: {
         tokens: resolvedAllTokens,
-        base64_encoded: "true",
-        fields: "status,language,time,stderr",
+        base64_encoded: "false",
+        fields: "status_id,status,language,time,stderr,stdout,compile_output,time,memory",
       },
       headers: {
         "x-rapidapi-key": process.env.JUDGE_API_KEY,
@@ -47,20 +47,22 @@ class SubmissionHandler {
       },
     };
 
-    const pollStatus = async (): Promise<string> => {
+    const pollStatus = async (): Promise<Result> => {
+      let result: Result;
       try {
         const response = await axios.request(options);
         const data = response.data.submissions;
 
         console.log("Poll Response:", data);
 
+
         const pending = data.some(
           (result: any) =>
-            result?.status?.description === "In Queue" ||
-            result?.status?.description === "Processing"
+            result?.status_id === 1 ||
+            result?.status_id === 2
         );
         const rejected = data.some(
-          (result: any) => result?.status?.description !== "Accepted"
+          (result: any) => result?.status_id !== 3
         );
 
         if (pending) {
@@ -73,14 +75,22 @@ class SubmissionHandler {
           });
         } else if (rejected) {
           console.log("At least one rejected.");
-          return "Rejected";
+          return  result = {
+            data: data,
+            status: "Wrong Answer" 
+          };
         } else {
           console.log("All accepted.");
-          return "Accepted";
+          return result = {
+            data: data,
+            status: "Accepted" 
+          };
         }
       } catch (error) {
         console.error("Polling error:", error);
-        return "Error";
+        return result = {
+          status: "Error" 
+        };
       }
     };
 
