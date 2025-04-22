@@ -22,7 +22,7 @@ const LockedSection: React.FC<LockedSectionProps> = ({children }) => {
       dispatch(setAuth(true));
     }
   }, [dispatch, isAuthenticated]);
-  console.log(isAuthenticated);
+  // console.log(isAuthenticated);
   return (
     <div className="relative">
       {/* Main content */}

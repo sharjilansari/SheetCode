@@ -4,7 +4,7 @@ import getCookie from "../../utils/getCookie";
 
 const Navbar = () => {
   const location = useLocation();
-  const isLoggedIn = useAppSelector((state) => state.auth.isAuthenticated); // Replace with your auth logic
+  const isLoggedIn = useAppSelector((state) => state.auth.isAuthenticated); 
   const token = getCookie("accessToken");
 
   const navItem = (to: string, label: string) => (

@@ -90,4 +90,18 @@ const getAllSubmissionsOfUserForGivenProblem = asyncHandler(
   }
 );
 
-export { postSubmissions, getAllSubmissionsOfUserForGivenProblem };
+const getSingleSubmissionOfUserForGivenProblem = asyncHandler(async(req: Request, res: Response) => {
+  const {id} = req.query;
+
+  if(!id){
+    return res.status(400).json(new ApiError(400, "id not received"))
+  }
+
+  const data = await Submissions.findById({_id: id});
+
+  if(!data) return res.status(404).json(new ApiError(404, "no data found"))
+
+  return res.status(200).json(new ApiResponse(200, data, "data send successfully"))
+})
+
+export { postSubmissions, getAllSubmissionsOfUserForGivenProblem, getSingleSubmissionOfUserForGivenProblem };

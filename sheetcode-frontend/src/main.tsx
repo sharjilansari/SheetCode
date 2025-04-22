@@ -11,6 +11,7 @@ import Submissions from "./components/ui/Submissions.tsx";
 import ProblemLists from "./components/ui/ProblemLists.tsx";
 import ProblemLayout from "./components/ui/ProblemLayout.tsx";
 import AuthPage from "./components/ui/AuthPage.tsx";
+import SubmissionDetails from "./components/ui/SubmissionDetail.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -28,6 +29,10 @@ createRoot(document.getElementById("root")!).render(
                 <Route index element={<Navigate to="description" replace />} />
                 <Route path="description" element={<Description />} />
                 <Route path="submissions" element={<Submissions />} />
+                <Route
+                  path="submission-details"
+                  element={<SubmissionDetails />}
+                />
               </Route>
             </Route>
           </Routes>

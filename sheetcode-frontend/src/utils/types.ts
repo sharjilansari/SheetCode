@@ -1,21 +1,20 @@
 interface submissionsAll {
-  submissions: 
-    {
-      language_id: number;
-      source_code: string;
-      stdin: string;
-      expected_output: string;
-    }[];
+  submissions: {
+    language_id: number;
+    source_code: string;
+    stdin: string;
+    expected_output: string;
+  }[];
 }
 
- interface Language {
+interface Language {
   _id: string;
   id: number;
   name: string;
 }
 
 interface Submission {
-  _id: string ;
+  _id: string;
   userId: string;
   problemId: string;
   status: Result;
@@ -28,21 +27,30 @@ interface Submission {
 interface TestCase {
   input: string;
   expectedOutput: string;
-};
+}
 
 interface Result {
   data?: {
     stdout: string;
     status_id: number;
     time: string;
-    memory: number,
-    stderr: string,
-    compile_output: string,
-    status: { id: number; description: string },
-    language: { id: number; name: string }
+    memory: number;
+    stderr: string;
+    compile_output: string;
+    status: { id: number; description: string };
+    language: { id: number; name: string };
   }[];
   status: string;
 }
 
+interface Problem {
+  _id: string;
+  problemTitle: string;
+  description: string;
+  examples: string;
+  difficulty: string;
+}
 
-export type {submissionsAll, Language, Submission, TestCase, Result};
+
+
+export type { submissionsAll, Language, Submission, TestCase, Result, Problem };

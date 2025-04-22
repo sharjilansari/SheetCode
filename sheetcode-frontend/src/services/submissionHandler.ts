@@ -21,7 +21,7 @@ class ApiService {
         "/submissions",
         { submissions, userId, problemId, code, language}
       );
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
     } catch (error) {
       console.error("Error saving submission:", error);
@@ -34,8 +34,17 @@ class ApiService {
       const response = await this.axiosInstance.get("/get-submissions",{
         params: { userId, problemId, skip, limit }
       })
-      console.log(response.data.data);
+      // console.log(response.data.data);
       return response.data.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getSingleSubmissionOfUserForGivenProblem(id: string){
+    try {
+      const response = await this.axiosInstance.get(`/submission-details?id=${id}`);
+      return response.data.data
     } catch (error) {
       console.log(error);
     }
@@ -43,5 +52,9 @@ class ApiService {
 
 
 }
+
+const x = new ApiService(import.meta.env.VITE_BASE_URL);
+const response = await x.getSingleSubmissionOfUserForGivenProblem('68017465711ecd52f4268fc2');
+console.log(response);
 
 export default ApiService;
