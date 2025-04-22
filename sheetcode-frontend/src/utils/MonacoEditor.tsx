@@ -25,10 +25,11 @@ function MonacoEditor() {
   const [languageId, setLanguageId] = useState<number>();
   const [submissionsData, setSubmissionsData] = useState<submissionsAll>();
   const [testCases, setTestCases] = useState<TestCase[]>();
-  // const [codeMap, setCodeMap] = useState<Record<string, string>>({});
 
-  const codeMap: Record<string, string> = useAppSelector((state) => state.counter.codeMap); 
-  console.log(codeMap);
+  const codeMap: Record<string, string> = useAppSelector(
+    (state) => state.counter.codeMap
+  );
+  // console.log(codeMap);
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -53,20 +54,22 @@ function MonacoEditor() {
     if (editorRef.current && language) {
       const savedCode = codeMap?.[language] || `// Your ${language} code here`;
       const currentCode = editorRef.current.getValue();
-  
-      // Only update if savedCode is different from current content
+
+      // Only set value if it's undefined (i.e., user hasn't typed anything yet)
       if (currentCode !== savedCode) {
         editorRef.current.setValue(savedCode);
       }
     }
+    editorRef.current?.focus();
   }, [language, codeMap]);
 
   function handleEditorDidMount(editor: monaco.editor.IStandaloneCodeEditor) {
     editorRef.current = editor;
+    editor?.focus();
     editor.onDidChangeModelContent(() => {
       const code = editor.getValue();
       if (language) {
-        dispatch(changeCode( {language, code}));
+        dispatch(changeCode({ language, code }));
       }
     });
   }
@@ -79,8 +82,8 @@ function MonacoEditor() {
         setLoading(false);
         return;
       }
-      if(language){
-        dispatch(changeCode( {language, code: editorRef.current.getValue()}));
+      if (language) {
+        dispatch(changeCode({ language, code: editorRef.current.getValue() }));
       }
 
       if (!testCases) {
@@ -123,7 +126,9 @@ function MonacoEditor() {
         } else {
           notify("success", "Accepted!!!");
         }
-        navigate(`/problems/${id}/submissions`, { state: { fromSubmit: true } });
+        navigate(`/problems/${id}/submissions`, {
+          state: { fromSubmit: true },
+        });
       } catch (error) {
         setLoading(false);
         notify("error", "Something went wrong on server side!!!");
@@ -167,7 +172,7 @@ function MonacoEditor() {
         <div className="rounded overflow-hidden border border-gray-600 h-[70vh] w-full">
           <Editor
             theme="vs-dark"
-            language={language}
+            language={language?.toLowerCase()}
             value={codeMap?.[language || ""] || `// Your ${language} code here`}
             onMount={handleEditorDidMount}
             onChange={(value) => {
@@ -178,6 +183,10 @@ function MonacoEditor() {
             options={{
               fontSize: 14,
               minimap: { enabled: false },
+              bracketPairColorization: {
+                enabled: true,
+              },
+              colorDecorators:true,
             }}
             className="h-full w-full"
           />
