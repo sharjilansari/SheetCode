@@ -39,7 +39,9 @@ const SubmissionDetails = () => {
       try {
         setLoading(true);
         const data: Submission =
-          await submissionHandler.getSingleSubmissionOfUserForGivenProblem(submissionId);
+          await submissionHandler.getSingleSubmissionOfUserForGivenProblem(
+            submissionId
+          );
         const problem: Problem = await problemHandler.fetchOneProblem(id!);
         setProblemTitle(problem.problemTitle);
         setSubmission(data);
@@ -70,16 +72,30 @@ const SubmissionDetails = () => {
 
   const firstCompileError = submissions.find((s) => s.compile_output);
 
+  const getRelevantErrorLines = (errorOutput: string) => {
+    const lines = errorOutput.split("\n");
+    const filtered = lines.filter(
+      (line) =>
+        line.includes("error:") ||
+        line.trim().startsWith("main.cpp") ||
+        line.trim().startsWith("^") ||
+        line.trim().startsWith("|")
+    );
+    return filtered.slice(0, 6).join("\n"); // return first few relevant lines
+  };
+
   const compileErrorElement = firstCompileError ? (
-    <pre className="bg-red-100 text-red-700 p-2 rounded mb-2 whitespace-pre-wrap">
-      🔧 <strong>Compile Error:</strong>
-      <br />
-      {firstCompileError.compile_output}
-    </pre>
+    <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm w-full overflow-x-auto">
+      <strong>🔧 Compile Error:</strong>
+      <pre className="mt-1 whitespace-pre-wrap break-words">
+        {getRelevantErrorLines(firstCompileError.compile_output)}
+      </pre>
+    </div>
   ) : null;
+  
 
   const wrongAnswer = submissions.filter((sub) => sub.status.id !== 3);
-  console.log(wrongAnswer);
+  // console.log(wrongAnswer);
 
   const handleBack = () => {
     navigate(`/problems/${id}/submissions`);
@@ -187,12 +203,15 @@ const SubmissionDetails = () => {
                   {item.language?.name || "-"}
                 </div>
 
-                {item.stderr && (
-                  <div className="text-red-400">
-                    <span className="font-semibold text-gray-300">Error:</span>{" "}
-                    {item.stderr}
-                  </div>
-                )}
+                {idx === wrongAnswer.findIndex((x) => x.stderr) &&
+                  item.stderr && (
+                    <div className="text-red-400">
+                      <span className="font-semibold text-gray-300">
+                        Error:
+                      </span>{" "}
+                      {item.stderr}
+                    </div>
+                  )}
 
                 {item.stdout && (
                   <div className="text-green-400">

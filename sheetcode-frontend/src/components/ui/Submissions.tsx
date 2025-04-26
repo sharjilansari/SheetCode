@@ -54,8 +54,6 @@ export default function Submissions() {
   const getUserDataFromLocalStorage = new LocalStorage();
 
   const userData = getUserDataFromLocalStorage.getFromLocalStorage("userData");
-  if (!userData) dispatch(setAuth(false));
-  // console.log(userData.data.user._id);
 
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   // console.log(isAuthenticated);
@@ -71,7 +69,7 @@ export default function Submissions() {
       const skip = (currentPage - 1) * itemsPerPage;
       const limit = itemsPerPage;
       const data = await submissionHandler.getSubmissionsOfUserForGivenProblem(
-        userData.data.user._id,
+        userData._id,
         id!,
         skip,
         limit

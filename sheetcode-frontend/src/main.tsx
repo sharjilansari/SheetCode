@@ -23,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
               {/* Show ProblemLists on / */}
               <Route index element={<ProblemLists />} />
               <Route path="/login" element={<AuthPage />} />
+              {/* <Route path="/profile" element={<UserProfile />} /> */}
 
               {/* Route for selected problem view */}
               <Route path="problems/:id" element={<ProblemLayout />}>
