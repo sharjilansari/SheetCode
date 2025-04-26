@@ -1,11 +1,12 @@
-import { Link, useLocation } from "react-router";
-import { useAppSelector } from "../../app/hooks";
-import getCookie from "../../utils/getCookie";
+import { Link, useLocation, useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setAuth } from "../../features/counter/authSlice";
 
 const Navbar = () => {
   const location = useLocation();
-  const isLoggedIn = useAppSelector((state) => state.auth.isAuthenticated); 
-  const token = getCookie("accessToken");
+  const isLoggedIn = useAppSelector((state) => state.auth.isAuthenticated);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const navItem = (to: string, label: string) => (
     <Link
@@ -20,6 +21,18 @@ const Navbar = () => {
     </Link>
   );
 
+  const handleClick = async () => {
+    // You may want to hit an API endpoint to invalidate the refresh token
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/logout`, {
+      method: "POST",
+      credentials: "include", // Ensure cookies are sent with the request
+    });
+
+    dispatch(setAuth(false)); // Update state to reflect logged-out status
+    localStorage.clear();
+    navigate("/"); // Redirect to home after logout
+  };
+
   return (
     <nav className="bg-[#1c1c1c] border-b border-orange-800 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center flex-wrap">
@@ -32,22 +45,18 @@ const Navbar = () => {
           {navItem("/profile", "Profile")}
 
           {isLoggedIn ? (
-            <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+            <button
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={() => handleClick()}
+            >
               Logout
             </button>
-          ) : token ? (
-            <Link
-              to="/login"
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              Login
-            </Link>
           ) : (
             <Link
-              to="/signup"
+              to="/login"
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              Signup
+              Signup/login
             </Link>
           )}
         </div>
